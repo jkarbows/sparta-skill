@@ -24,7 +24,7 @@ Plants.prototype.eventHandlers.onSessionStarted = function(sessionStartedRequest
         userSecret = tokens[1];
         console.log('tokens' + tokens[0] + ' :: ' + tokens[1])
     } else {
-        var speechOutput = "You must have a [app name] account to use this skill. "
+        var speechOutput = "You must have a Blooming account to use this skill. "
             + "Click on the card in the Alexa app to link your account now.";
         response.reject(speechOutput);
     }*/
@@ -34,7 +34,7 @@ Plants.prototype.eventHandlers.onLaunch = function(launchRequest, session, respo
     console.log('Plants onLaunch requestId' + launchRequest.requestId + ', sessionId: ' + session.sessionId);
     var speechOutput = "Welcome to Plants. Your plants are fine, relax kid.";
     var cardTitle = "My Plants";
-    response.tellWithCard(speechOutput, speechOutput, cardTitle, speechOutput);
+    response.tellWithCard(speechOutput, cardTitle, speechOutput);
 };
 
 Plants.prototype.intentHandlers = {
@@ -43,19 +43,36 @@ Plants.prototype.intentHandlers = {
         var cardTitle = "My Plants";
 
         get('status', response, function(data) {
-          speechOutput = "Current temperature: " + data.temperature;
-          response.tell(speechOutput);
+          var plantCondition = "healthy";
+          
+          speechOutput = "Your " + /*data.type*/'onion' + " is " + plantCondition
+            + ". The lights are " + (data.lightState ? 'shining bright, ' : 'off, ')
+            + "And it's somewhat " + "dry in the room";
+          response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
         });
     },
     "DetailStatusIntent": function(intent, session, response) {
         var speechOutput = "";
         var cardTitle = "My Plants";
         
-        
+        get('status', response, function(data) {
+          var plantCondition = "healthy";
+          
+          speechOutput = "Here's the data on your " + /*data.type*/ "onion" + ": "
+            + "It is currently " + data.temperature + " degrees in the room. "
+            + "Humidity is at " + data.humidity + " percent. "
+            + "The lights are " + (data.lightState ? 'on ' : 'off. ');
+          if (data.lightState) {
+            speechOutput += "and shining at " + data.lumens + " lumens. ";
+          }
+          speechOutput += " and your soil is dry.";
+          
+          response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
+        });
     },
     "AMAZON.HelpIntent": function(intent, session, response) {
         var speechOutput = "Welcome to Plants. I can perform a range of actions on plants linked "
-          + "to me through [app name], as well as provide general information on your plants.";
+          + "to me through the Blooming, as well as provide general information on your plants.";
         var cardTitle = "My Plants";
         response.askWithCard(speechOutput, speechOutput, cardTitle, speechOutput);
     }
@@ -73,7 +90,7 @@ function get(endpoint, response, callback) {
   }, function (err, res, data) {
     if (err) {
       console.log(err);
-      speechOutput = "I'm having trouble communicating with the plant world. Try again later.";
+      var speechOutput = "I'm having trouble communicating with the plant world. Try again later.";
       response.tell(speechOutput);
     }
     console.log(data);
