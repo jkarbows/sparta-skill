@@ -3,6 +3,7 @@ secrets.js
 
 # Dependency directories
 node_modules
+*.zip
 
 # Optional npm cache directory
 .npm
