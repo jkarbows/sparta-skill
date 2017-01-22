@@ -70,6 +70,30 @@ Plants.prototype.intentHandlers = {
           response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
         });
     },
+    "LightOnIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var postData = {
+          name: 'Light',
+          power: 'on'
+        }
+        
+        post('light/update', postData, response, function(data) {
+          speechOutput = "Turned that bitch the fuck on"
+          response.tell(speechOutput);
+        });
+    },
+    "LightOffIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var postData = {
+          name: 'Light',
+          power: 'off'
+        }
+        
+        post('light/update', postData, response, function(data) {
+          speechOutput = "The light on your onion has been turned off.";
+          response.tell(speechOutput);
+        });
+    },
     "AMAZON.HelpIntent": function(intent, session, response) {
         var speechOutput = "Welcome to Plants. I can perform a range of actions on plants linked "
           + "to me through the Blooming, as well as provide general information on your plants.";
@@ -88,6 +112,22 @@ function get(endpoint, response, callback) {
     url: 'http://45.56.106.120/' + endpoint,
     json: true
   }, function (err, res, data) {
+    if (err) {
+      console.log(err);
+      var speechOutput = "I'm having trouble communicating with the plant world. Try again later.";
+      response.tell(speechOutput);
+    }
+    console.log(data);
+    callback(data);
+  });
+}
+
+function post(endpoint, postData, response, callback) {
+  request.post({
+    url: 'http://45.56.106.120/' + endpoint,
+    json: true,
+    body: postData
+  }, function(err, res, data) {
     if (err) {
       console.log(err);
       var speechOutput = "I'm having trouble communicating with the plant world. Try again later.";
