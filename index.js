@@ -45,10 +45,16 @@ Plants.prototype.intentHandlers = {
         get('status', response, function(data) {
           var plantCondition = "healthy";
           
-          speechOutput = "Your " + /*data.type*/'onion' + " is " + plantCondition
-            + ". The lights are " + (data.lightState ? 'shining bright, ' : 'off, ')
-            + "And it's somewhat " + "dry in the room";
-          response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
+          speechOutput = "Your " + /*data.type*/'onion' + " is " + plantCondition;
+            get('light/status/Light', response, function(data) {
+              var lightState = false;
+              if (data[0].power === "on") {
+                lightState = true;
+              }
+              speechOutput += ". The lights are " + (lightState ? 'shining bright' : 'off')
+                + ", and it's somewhat " + "dry in the room";
+              response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
+            });
         });
     },
     "DetailStatusIntent": function(intent, session, response) {
@@ -77,9 +83,15 @@ Plants.prototype.intentHandlers = {
           power: 'on'
         }
         
-        post('light/update', postData, response, function(data) {
-          speechOutput = "Turned that bitch the fuck on"
-          response.tell(speechOutput);
+        get('light/status/Light', response, function(data) {
+          if (data[0].power === "on") {
+            speechOutput = "The lights are already on.";
+            response.tell(speechOutput);
+          }
+          post('light/update', postData, response, function(data) {
+            speechOutput = "Turned that bitch the fuck on"
+            response.tell(speechOutput);
+          });
         });
     },
     "LightOffIntent": function(intent, session, response) {
@@ -89,8 +101,38 @@ Plants.prototype.intentHandlers = {
           power: 'off'
         }
         
-        post('light/update', postData, response, function(data) {
-          speechOutput = "The light on your onion has been turned off.";
+        get('light/status/Light', response, function(data) {
+          if (data[0].power === "off") {
+            speechOutput = "The lights are already off.";
+            response.tell(speechOutput);
+          }
+          post('light/update', postData, response, function(data) {
+            speechOutput = "The light on your onion has been turned off.";
+            response.tell(speechOutput);
+          });
+        });
+    },
+    "PumpOnIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var postData = {
+          name: 'Pump',
+          power: 'on'
+        }
+        
+        post('pump/update', postData, response, function(data) {
+          speechOutput = "The water pump for your " + /*data.type*/"onion" + " has been turned on.";
+          response.tell(speechOutput);
+        });
+    },
+    "PumpOffIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var postData = {
+          name: 'Pump',
+          power: 'off'
+        }
+        
+        post('pump/update', postData, response, function(data) {
+          speechOutput = "The water pump for your " + /*data.type*/"onion" + " has been turned off.";
           response.tell(speechOutput);
         });
     },
