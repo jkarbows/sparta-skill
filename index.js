@@ -52,7 +52,7 @@ Plants.prototype.intentHandlers = {
                 lightState = true;
               }
               speechOutput += ". The lights are " + (lightState ? 'shining bright' : 'off')
-                + ", and it's somewhat " + "dry in the room";
+                + ", and the temperature is good.";
               response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
             });
         });
@@ -62,18 +62,25 @@ Plants.prototype.intentHandlers = {
         var cardTitle = "My Plants";
         
         get('status', response, function(data) {
+          var lumens = data.lumens;
           var plantCondition = "healthy";
           
           speechOutput = "Here's the data on your " + /*data.type*/ "onion" + ": "
             + "It is currently " + data.temperature + " degrees in the room. "
-            + "Humidity is at " + data.humidity + " percent. "
-            + "The lights are " + (data.lightState ? 'on ' : 'off. ');
-          if (data.lightState) {
-            speechOutput += "and shining at " + data.lumens + " lumens. ";
-          }
-          speechOutput += " and your soil is dry.";
-          
-          response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
+            + "Humidity is at " + data.humidity + " percent. ";
+          get('light/status/Light', response, function(data) {
+            var lightState = false;
+            if (data[0].power === "on") {
+              lightState = true;
+            }
+            speechOutput += "The lights are " + (lightState ? 'on, ' : 'off, ');
+            if (lightState) {
+              speechOutput += ", and shining at " + lumens + " lumens, ";
+            }
+            speechOutput += " and your soil is dry.";
+            
+            response.tellWithCard(speechOutput, "Plant Condition", speechOutput);
+          });
         });
     },
     "LightOnIntent": function(intent, session, response) {
@@ -89,7 +96,7 @@ Plants.prototype.intentHandlers = {
             response.tell(speechOutput);
           }
           post('light/update', postData, response, function(data) {
-            speechOutput = "Turned that bitch the fuck on"
+            speechOutput = "The light on your onion has been turned on."
             response.tell(speechOutput);
           });
         });
