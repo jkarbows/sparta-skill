@@ -3,3 +3,80 @@
 
 var AlexaSkill = require('./AlexaSkill');
 var request = require('request');
+var secrets = require('./secrets');
+
+var APP_ID = secrets.alexa;
+
+var Plants = function() {
+    AlexaSkill.call(this, APP_ID);
+};
+
+Plants.prototype = Object.create(AlexaSkill.prototype);
+Plants.prototype.constructor = Plants;
+
+Plants.prototype.eventHandlers.onSessionStarted = function(sessionStartedRequest, session, response) {
+    console.log('My Plants onSessionStarted requestId:' + sessionStartedRequest.requestId +', sessionId: ' + session.sessionId);
+
+    /*if(session.user.accessToken) {
+        var token = session.user.accessToken;
+        var tokens = token.split('ILOVEYOU');
+        userToken = tokens[0];
+        userSecret = tokens[1];
+        console.log('tokens' + tokens[0] + ' :: ' + tokens[1])
+    } else {
+        var speechOutput = "You must have a [app name] account to use this skill. "
+            + "Click on the card in the Alexa app to link your account now.";
+        response.reject(speechOutput);
+    }*/
+};
+
+Plants.prototype.eventHandlers.onLaunch = function(launchRequest, session, response) {
+    console.log('Plants onLaunch requestId' + launchRequest.requestId + ', sessionId: ' + session.sessionId);
+    var speechOutput = "Welcome to Plants. Your plants are fine, relax kid.";
+    var cardTitle = "My Plants";
+    response.tellWithCard(speechOutput, speechOutput, cardTitle, speechOutput);
+};
+
+Plants.prototype.intentHandlers = {
+    "StatusIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var cardTitle = "My Plants";
+
+        get('status', response, function(data) {
+          speechOutput = "Current temperature: " + data.temperature;
+          response.tell(speechOutput);
+        });
+    },
+    "DetailStatusIntent": function(intent, session, response) {
+        var speechOutput = "";
+        var cardTitle = "My Plants";
+        
+        
+    },
+    "AMAZON.HelpIntent": function(intent, session, response) {
+        var speechOutput = "Welcome to Plants. I can perform a range of actions on plants linked "
+          + "to me through [app name], as well as provide general information on your plants.";
+        var cardTitle = "My Plants";
+        response.askWithCard(speechOutput, speechOutput, cardTitle, speechOutput);
+    }
+};
+
+exports.handler = function(event, context) {
+    var PlantsHelper = new Plants();
+    PlantsHelper.execute(event, context);
+};
+
+function get(endpoint, response, callback) {
+  request.get({
+    url: 'http://45.56.106.120/' + endpoint,
+    json: true
+  }, function (err, res, data) {
+    if (err) {
+      console.log(err);
+      speechOutput = "I'm having trouble communicating with the plant world. Try again later.";
+      response.tell(speechOutput);
+    }
+    console.log(data);
+    callback(data);
+  });
+}
